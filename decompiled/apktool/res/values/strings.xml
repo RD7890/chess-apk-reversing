@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Chess</string>
+    <string name="bishop">Bishop</string>
+    <string name="black">Black</string>
+    <string name="black_mate">Game over, black mates!</string>
+    <string name="blacks_move">"Black's move"</string>
+    <string name="button_new_game">New Game</string>
+    <string name="checkin_cancel">Cancel</string>
+    <string name="checkin_day">DAY %d</string>
+    <string name="checkin_more_extra">No hints, no undo!</string>
+    <string name="checkin_more_spend">USE YOUR GP TO UNLOCK PREMIUM</string>
+    <string name="checkin_more_text">"Win levels to get big rewards:
+"<b>100<font color="#fcba03"> GP</font> - 1000<font color="#fcba03"> GP</font></b></string>
+    <string name="checkin_reset">Reset</string>
+    <string name="checkin_settings">Settings</string>
+    <string name="checkin_status_available">AVAILABLE</string>
+    <string name="checkin_status_collected">COLLECTED</string>
+    <string name="checkin_status_locked">LOCKED</string>
+    <string name="checkin_timeerror">Time Sync Error</string>
+    <string name="checkin_timeerror_text">Time error detected. Fix your system clock or reset progress (Points and Premium will be lost).</string>
+    <string name="checkin_title">DAILY BONUS</string>
+    <string name="checkin_title_earn">WIN &amp; EARN</string>
+    <string name="common_google_play_services_enable_button">Enable</string>
+    <string name="common_google_play_services_enable_text">"%1$s won't work unless you enable Google Play services."</string>
+    <string name="common_google_play_services_enable_title">Enable Google Play services</string>
+    <string name="common_google_play_services_install_button">Install</string>
+    <string name="common_google_play_services_install_text">"%1$s won't run without Google Play services, which are missing from your device."</string>
+    <string name="common_google_play_services_install_title">Get Google Play services</string>
+    <string name="common_google_play_services_notification_channel_name">Google Play services availability</string>
+    <string name="common_google_play_services_notification_ticker">Google Play services error</string>
+    <string name="common_google_play_services_unknown_issue">%1$s is having trouble with Google Play services. Please try again.</string>
+    <string name="common_google_play_services_unsupported_text">"%1$s won't run without Google Play services, which are not supported by your device."</string>
+    <string name="common_google_play_services_update_button">Update</string>
+    <string name="common_google_play_services_update_text">"%1$s won't run unless you update Google Play services."</string>
+    <string name="common_google_play_services_update_title">Update Google Play services</string>
+    <string name="common_google_play_services_updating_text">"%1$s won't run without Google Play services, which are currently updating."</string>
+    <string name="common_google_play_services_wear_update_text">New version of Google Play services needed. It will update itself shortly.</string>
+    <string name="common_open_on_phone">Open on phone</string>
+    <string name="confirm_again">Replay</string>
+    <string name="confirm_analysis">Analysis</string>
+    <string name="confirm_buy">Buy</string>
+    <string name="confirm_cancel">Cancel</string>
+    <string name="confirm_claim">Claim</string>
+    <string name="confirm_daily">DAILY REWARD</string>
+    <string name="confirm_daily_desc">Once Daily</string>
+    <string name="confirm_gotit">Got it</string>
+    <string name="confirm_more">Get more</string>
+    <string name="confirm_next">Next Level</string>
+    <string name="confirm_next_simple">Next</string>
+    <string name="confirm_play">Play</string>
+    <string name="confirm_premium_desc">Unlimited forever</string>
+    <string name="confirm_save">Save</string>
+    <string name="confirm_togame">Back</string>
+    <string name="confirm_tomenu">To Menu</string>
+    <string name="confirm_wait">Please wait…</string>
+    <string name="confirm_yes">Yes</string>
+    <string name="default_web_client_id">1095083768560-mmlpa1k2l395ucq1t3c0cp88es66h9i4.apps.googleusercontent.com</string>
+    <string name="desc_return">Do you want to replay the game?</string>
+    <string name="draw_50">Game over, draw by 50 move rule!</string>
+    <string name="draw_agree">Game over, draw by agreement!</string>
+    <string name="draw_no_mate">Game over, draw by impossibility of mate!</string>
+    <string name="draw_rep">Game over, draw by repetition!</string>
+    <string name="enPassant">En passant</string>
+    <string name="firebase_database_url">https://chess-2f712.firebaseio.com</string>
+    <string name="gcm_defaultSenderId">1095083768560</string>
+    <string name="google_api_key">AIzaSyCMOyOOlOMCsVvrjlLa07oUjdK0I-ZeC3A</string>
+    <string name="google_app_id">1:1095083768560:android:351a31c20548920c782035</string>
+    <string name="google_crash_reporting_api_key">AIzaSyCMOyOOlOMCsVvrjlLa07oUjdK0I-ZeC3A</string>
+    <string name="google_storage_bucket">chess-2f712.appspot.com</string>
+    <string name="invalid_move">Invalid move</string>
+    <string name="knight">Knight</string>
+    <string name="main_msg_1">Easy Level unlocked</string>
+    <string name="main_msg_11">Light Wind unlocked</string>
+    <string name="main_msg_12">Double Ring unlocked</string>
+    <string name="main_msg_13">Great Battle unlocked</string>
+    <string name="main_msg_14">North Star unlocked</string>
+    <string name="main_msg_15">Hard Way unlocked</string>
+    <string name="main_msg_16">Cold Time unlocked</string>
+    <string name="main_msg_17">Hero Field unlocked</string>
+    <string name="main_msg_18">Battle Ground unlocked</string>
+    <string name="main_msg_19">Cross Fire unlocked</string>
+    <string name="main_msg_2">Middle Level unlocked</string>
+    <string name="main_msg_3">Hard Level unlocked</string>
+    <string name="main_msg_4">Advanced Level unlocked</string>
+    <string name="main_msg_5">Expert Level unlocked</string>
+    <string name="main_msg_6">Candidate Master unlocked</string>
+    <string name="main_msg_7">Master Level unlocked</string>
+    <string name="main_msg_8">Grand Master unlocked</string>
+    <string name="main_msg_9">Champion Level unlocked</string>
+    <string name="main_msg_black">BLACK WIN!</string>
+    <string name="main_msg_draw">DRAW</string>
+    <string name="main_msg_lose">You Lose</string>
+    <string name="main_msg_next">Next Level unlocked</string>
+    <string name="main_msg_quit">Are you sure you want to quit?</string>
+    <string name="main_msg_small_lose">Try Again</string>
+    <string name="main_msg_small_win">Congratulations!</string>
+    <string name="main_msg_white">WHITE WIN!</string>
+    <string name="main_msg_win">YOU WIN!</string>
+    <string name="menu_button_play">PLAY</string>
+    <string name="menu_button_settings">SETTINGS</string>
+    <string name="menu_level_0">"BEGINNER
+LEVEL"</string>
+    <string name="menu_level_1">"EASY
+LEVEL"</string>
+    <string name="menu_level_10">"ROYAL
+ARROWS"</string>
+    <string name="menu_level_100">PUZZLE</string>
+    <string name="menu_level_11">"LIGHT
+WIND"</string>
+    <string name="menu_level_12">"DOUBLE
+RING"</string>
+    <string name="menu_level_13">"GREAT
+BATTLE"</string>
+    <string name="menu_level_14">"NORTH
+STAR"</string>
+    <string name="menu_level_15">"HARD
+WAY"</string>
+    <string name="menu_level_16">"COLD
+TIME"</string>
+    <string name="menu_level_17">"HERO
+FIELD"</string>
+    <string name="menu_level_18">"BATTLE
+GROUND"</string>
+    <string name="menu_level_19">"CROSS
+FIRE"</string>
+    <string name="menu_level_2">"MIDDLE
+LEVEL"</string>
+    <string name="menu_level_3">"HARD
+LEVEL"</string>
+    <string name="menu_level_4">"ADVANCED
+LEVEL"</string>
+    <string name="menu_level_5">"EXPERT
+LEVEL"</string>
+    <string name="menu_level_50">"TWO
+PLAYERS"</string>
+    <string name="menu_level_6">"CANDIDATE
+MASTER"</string>
+    <string name="menu_level_7">"MASTER
+LEVEL"</string>
+    <string name="menu_level_8">"GRAND
+MASTER"</string>
+    <string name="menu_level_9">"CHAMPION
+LEVEL"</string>
+    <string name="menu_level_close">To unlock this level you must win the previous level</string>
+    <string name="menu_level_plan_0">BEGINNER LEVEL</string>
+    <string name="menu_level_plan_1">EASY LEVEL</string>
+    <string name="menu_level_plan_10">ROYAL ARROWS</string>
+    <string name="menu_level_plan_11">LIGHT WIND</string>
+    <string name="menu_level_plan_12">DOUBLE RING</string>
+    <string name="menu_level_plan_13">GREAT BATTLE</string>
+    <string name="menu_level_plan_14">NORTH STAR</string>
+    <string name="menu_level_plan_15">HARD WAY</string>
+    <string name="menu_level_plan_16">COLD TIME</string>
+    <string name="menu_level_plan_17">HERO FIELD</string>
+    <string name="menu_level_plan_18">BATTLE GROUND</string>
+    <string name="menu_level_plan_19">CROSS FIRE</string>
+    <string name="menu_level_plan_2">MIDDLE LEVEL</string>
+    <string name="menu_level_plan_3">HARD LEVEL</string>
+    <string name="menu_level_plan_4">ADVANCED LEVEL</string>
+    <string name="menu_level_plan_5">EXPERT LEVEL</string>
+    <string name="menu_level_plan_50">TWO PLAYERS</string>
+    <string name="menu_level_plan_6">CANDIDATE MASTER</string>
+    <string name="menu_level_plan_7">MASTER LEVEL</string>
+    <string name="menu_level_plan_8">GRAND MASTER</string>
+    <string name="menu_level_plan_9">CHAMPION LEVEL</string>
+    <string name="menu_level_star">The level was completed without using the undo and hint buttons</string>
+    <string name="menu_locked">LOCKED</string>
+    <string name="menu_puzzle_mate_1">MATE IN 1 MOVE</string>
+    <string name="menu_puzzle_mate_2">MATE IN 2 MOVES</string>
+    <string name="menu_puzzle_mate_3">MATE IN 3 MOVES</string>
+    <string name="menu_puzzle_mate_4">MATE IN 4 MOVES</string>
+    <string name="menu_title_top">CHESS</string>
+    <string name="menu_title_top_premium"><font color="#6effffff">Chess</font> <b>PREMIUM</b></string>
+    <string name="pack2_title_top">WILD CHESS</string>
+    <string name="pack2_unlock_desc">"To unlock the event
+you must win 3 games"</string>
+    <string name="piece_names">P N B R Q K</string>
+    <string name="ponder">ponder</string>
+    <string name="premium_btn_text">UNLOCK FOR %1$s</string>
+    <string name="premium_points_btn_text">1 month for %1$s GP</string>
+    <string name="premium_points_not_enough">Not enough points</string>
+    <string name="premium_text">- <b>Unlimited</b>" game analysis 
+- "<b>Unlimited</b>" game hints 
+- "<b>Unlimited</b>" takebacks 
+- No Ads"</string>
+    <string name="premium_text_extra">Pay once, own it forever. No subscriptions.</string>
+    <string name="premium_title">PREMIUM</string>
+    <string name="project_id">chess-2f712</string>
+    <string name="promText">You can try another of our games</string>
+    <string name="promTextTitle">CHECKERS</string>
+    <string name="promText_Prem">Unlock All Features</string>
+    <string name="promote_pawn_to">Promote pawn to?</string>
+    <string name="queen">Queen</string>
+    <string name="rate_btn_later">Later</string>
+    <string name="rate_btn_no">No, Thanks</string>
+    <string name="rate_btn_rate">RATE NOW</string>
+    <string name="rate_message">"If you enjoy playing Chess, please take a moment to rate this app.
+Thanks for your support!"</string>
+    <string name="rate_title">Rate Chess</string>
+    <string name="resign_black">Game over, black resigns!</string>
+    <string name="resign_white">Game over, white resigns!</string>
+    <string name="restart">Do you want to restart current game?</string>
+    <string name="rook">Rook</string>
+    <string name="set_ad">MANAGE</string>
+    <string name="set_ad_title">PRIVACY OPTIONS:</string>
+    <string name="set_button_back">BACK</string>
+    <string name="set_button_rate">RATE</string>
+    <string name="set_capture_title">MANDATORY JUMPS:</string>
+    <string name="set_helper_title">HELPER:</string>
+    <string name="set_move_0">WHITE</string>
+    <string name="set_move_1">BLACK</string>
+    <string name="set_move_alter">ALTERNATELY</string>
+    <string name="set_move_title">PLAY AS:</string>
+    <string name="set_rm"><font color="#6effffff">Chess</font> <b>PREMIUM</b></string>
+    <string name="set_rm_title">UPGRADE:</string>
+    <string name="set_sounds_off">OFF</string>
+    <string name="set_sounds_on">ON</string>
+    <string name="set_sounds_title">SOUNDS:</string>
+    <string name="set_sp">CONTACT US</string>
+    <string name="set_sp_title">SUPPORT:</string>
+    <string name="set_themes_plan_0">AUTUMN THEME</string>
+    <string name="set_themes_plan_1">DARK THEME</string>
+    <string name="set_themes_plan_2">GOLD THEME</string>
+    <string name="set_themes_plan_3">CLASSIC THEME</string>
+    <string name="set_themes_plan_4">BLACK THEME</string>
+    <string name="set_themes_plan_5">GRAY THEME</string>
+    <string name="set_themes_plan_6">GREEN THEME</string>
+    <string name="set_themes_plan_7">WHITE THEME</string>
+    <string name="set_themes_title">SELECT THEME</string>
+    <string name="set_title_top">SETTINGS</string>
+    <string name="set_view_0">VERT.</string>
+    <string name="set_view_1">HORIZ.</string>
+    <string name="set_view_title">VIEW:</string>
+    <string name="share_msg">"I opened %1$s in Chess!
+https://play.google.com/store/apps/details?id=com.jetstartgames.chess"</string>
+    <string name="stalemate">Game over, draw by stalemate!</string>
+    <string name="stalemate_with_description">"Game over, draw by stalemate!
+The player has no legal move and is not in check"</string>
+    <string name="thinking">thinking</string>
+    <string name="title_reward">Need a Hint?</string>
+    <string name="title_reward_return">Back to the game</string>
+    <string name="white">White</string>
+    <string name="white_mate">Game over, white mates!</string>
+    <string name="whites_move">"White's move"</string>
+    <string name="gpdeku_split_title">gpdeku</string>
+</resources>

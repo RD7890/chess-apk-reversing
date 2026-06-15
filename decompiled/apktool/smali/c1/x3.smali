@@ -1,0 +1,14 @@
+.class public interface abstract Lc1/x3;
+.super Ljava/lang/Object;
+.source "r8-map-id-a307fbaa7738d936b262c73ebf7b8b6bac6e9f6f8b4a6e0fce193b963190fdb4"
+
+
+# virtual methods
+.method public abstract a(I)Z
+.end method
+
+.method public abstract b(Landroid/content/Intent;)V
+.end method
+
+.method public abstract c(Landroid/app/job/JobParameters;)V
+.end method

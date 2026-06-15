@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple android:color="#ffffffff"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <vector android:height="50.0dip" android:width="50.0dip" android:viewportWidth="1000.0" android:viewportHeight="100.0">
+            <group android:name="triableGroup">
+                <path android:name="triangle" android:fillColor="#8cffffff" android:pathData="m 0,100 l 0,-100 l 1000,0 l -25,100 z" />
+            </group>
+        </vector>
+    </item>
+</ripple>

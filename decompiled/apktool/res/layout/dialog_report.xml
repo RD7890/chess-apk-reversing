@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:id="@id/dialog_alert_root" android:background="@drawable/alert_border" android:padding="10.0dip" android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <RelativeLayout android:id="@id/title_line" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content">
+        <Button android:textColor="#ffffffff" android:gravity="left" android:id="@id/menuButton" android:background="@drawable/xml_menu" android:visibility="invisible" android:layout_width="40.0dip" android:layout_height="28.0dip" android:layout_marginLeft="5.0dip" android:layout_marginTop="2.0dip" android:layout_alignParentLeft="true" android:soundEffectsEnabled="false" />
+        <TextView android:textColor="#ffffffff" android:id="@id/title" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="2.0dip" android:layout_marginBottom="10.0dip" android:layout_toLeftOf="@id/viewButton" android:layout_toRightOf="@id/menuButton" />
+        <Button android:textColor="#ffffffff" android:gravity="right" android:id="@id/viewButton" android:background="@drawable/xml_view" android:visibility="invisible" android:layout_width="40.0dip" android:layout_height="28.0dip" android:layout_marginTop="2.0dip" android:layout_marginRight="5.0dip" android:layout_alignParentRight="true" android:soundEffectsEnabled="false" />
+    </RelativeLayout>
+    <LinearLayout android:gravity="center" android:orientation="horizontal" android:id="@id/reportWait" android:layout_width="fill_parent" android:layout_height="64.0dip" android:layout_marginTop="10.0dip" android:layout_below="@id/title_line">
+        <TextView android:textSize="14.0dip" android:textColor="#ffffffff" android:id="@id/wait_label" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="6.0dip" android:text="@string/confirm_wait" />
+    </LinearLayout>
+    <LinearLayout android:gravity="center" android:orientation="horizontal" android:id="@id/data" android:visibility="invisible" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="10.0dip" android:weightSum="14.0" android:layout_below="@id/title_line">
+        <LinearLayout android:gravity="center" android:orientation="vertical" android:layout_width="0.0dip" android:layout_height="wrap_content" android:layout_weight="4.0">
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="20.0dip" android:layout_marginTop="0.0dip" android:layout_marginBottom="6.0dip" />
+            <TextView android:textSize="14.0dip" android:textColor="#ffffffff" android:id="@id/lb_white" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="6.0dip" android:text="@string/white" />
+            <TextView android:textSize="14.0dip" android:textColor="#ff969696" android:id="@id/lb_black" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/black" />
+        </LinearLayout>
+        <LinearLayout android:gravity="center" android:orientation="vertical" android:layout_width="0.0dip" android:layout_height="wrap_content" android:layout_weight="2.0">
+            <View android:background="@drawable/ic_best" android:layout_width="20.0dip" android:layout_height="20.0dip" android:layout_marginTop="0.0dip" android:layout_marginBottom="6.0dip" />
+            <TextView android:textSize="14.0dip" android:textColor="#ff51a34c" android:id="@id/count_white_best" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="6.0dip" android:text="0" />
+            <TextView android:textSize="14.0dip" android:textColor="#ff51a34c" android:id="@id/count_black_best" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" />
+        </LinearLayout>
+        <LinearLayout android:gravity="center" android:orientation="vertical" android:layout_width="0.0dip" android:layout_height="wrap_content" android:layout_weight="2.0">
+            <View android:background="@drawable/ic_good" android:layout_width="20.0dip" android:layout_height="20.0dip" android:layout_marginTop="0.0dip" android:layout_marginBottom="6.0dip" />
+            <TextView android:textSize="14.0dip" android:textColor="#ff51a34c" android:id="@id/count_white_good" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="6.0dip" android:text="0" />
+            <TextView android:textSize="14.0dip" android:textColor="#ff51a34c" android:id="@id/count_black_good" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" />
+        </LinearLayout>
+        <LinearLayout android:gravity="center" android:orientation="vertical" android:layout_width="0.0dip" android:layout_height="wrap_content" android:layout_weight="2.0">
+            <View android:background="@drawable/ic_book" android:layout_width="20.0dip" android:layout_height="20.0dip" android:layout_marginTop="0.0dip" android:layout_marginBottom="6.0dip" />
+            <TextView android:textSize="14.0dip" android:textColor="#ff0097c4" android:id="@id/count_white_book" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="6.0dip" android:text="0" />
+            <TextView android:textSize="14.0dip" android:textColor="#ff0097c4" android:id="@id/count_black_book" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" />
+        </LinearLayout>
+        <LinearLayout android:gravity="center" android:orientation="vertical" android:layout_width="0.0dip" android:layout_height="wrap_content" android:layout_weight="2.0">
+            <View android:background="@drawable/ic_bad" android:layout_width="20.0dip" android:layout_height="20.0dip" android:layout_marginTop="0.0dip" android:layout_marginBottom="6.0dip" />
+            <TextView android:textSize="14.0dip" android:textColor="#ffffca00" android:id="@id/count_white_bad" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="6.0dip" android:text="0" />
+            <TextView android:textSize="14.0dip" android:textColor="#ffffca00" android:id="@id/count_black_bad" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" />
+        </LinearLayout>
+        <LinearLayout android:gravity="center" android:orientation="vertical" android:layout_width="0.0dip" android:layout_height="wrap_content" android:layout_weight="2.0">
+            <View android:background="@drawable/ic_mistake" android:layout_width="20.0dip" android:layout_height="20.0dip" android:layout_marginTop="0.0dip" android:layout_marginBottom="6.0dip" />
+            <TextView android:textSize="14.0dip" android:textColor="#fff51303" android:id="@id/count_white_mistake" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="6.0dip" android:text="0" />
+            <TextView android:textSize="14.0dip" android:textColor="#fff51303" android:id="@id/count_black_mistake" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" />
+        </LinearLayout>
+    </LinearLayout>
+    <LinearLayout android:orientation="horizontal" android:id="@id/buttons" android:layout_width="fill_parent" android:layout_height="60.0dip" android:layout_marginTop="10.0dip" android:layout_below="@id/data">
+        <Button android:textSize="15.0dip" android:textColor="#ffffffff" android:id="@id/negativeButton" android:background="@drawable/xml_button_blue" android:visibility="gone" android:layout_width="0.0dip" android:layout_height="50.0dip" android:layout_marginLeft="1.0dip" android:layout_marginTop="10.0dip" android:layout_marginRight="1.0dip" android:layout_weight="1.0" android:soundEffectsEnabled="false" />
+        <Button android:textSize="15.0dip" android:textColor="#ffffffff" android:id="@id/neutralButton" android:background="@drawable/xml_button_neutral" android:visibility="gone" android:layout_width="0.0dip" android:layout_height="50.0dip" android:layout_marginLeft="1.0dip" android:layout_marginTop="10.0dip" android:layout_marginRight="1.0dip" android:layout_weight="1.0" android:soundEffectsEnabled="false" />
+        <Button android:textSize="15.0dip" android:textColor="#ffffffff" android:id="@id/positiveButton" android:background="@drawable/xml_button_green" android:visibility="gone" android:layout_width="0.0dip" android:layout_height="50.0dip" android:layout_marginLeft="1.0dip" android:layout_marginTop="10.0dip" android:layout_marginRight="1.0dip" android:layout_weight="1.0" android:soundEffectsEnabled="false" />
+    </LinearLayout>
+</RelativeLayout>

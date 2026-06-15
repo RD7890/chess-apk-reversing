@@ -1,0 +1,19 @@
+package i3;
+
+import g3.j0;
+import java.util.concurrent.atomic.AtomicLongFieldUpdater;
+
+/* compiled from: r8-map-id-a307fbaa7738d936b262c73ebf7b8b6bac6e9f6f8b4a6e0fce193b963190fdb4 */
+/* loaded from: classes.dex */
+public abstract class g extends j0 {
+
+    /* renamed from: k, reason: collision with root package name */
+    public b f1983k;
+
+    @Override // g3.p
+    public final void b(s2.i iVar, Runnable runnable) {
+        b bVar = this.f1983k;
+        AtomicLongFieldUpdater atomicLongFieldUpdater = b.f1969p;
+        bVar.b(runnable, k.f1991g);
+    }
+}

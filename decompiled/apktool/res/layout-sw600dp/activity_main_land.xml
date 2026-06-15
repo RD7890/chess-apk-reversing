@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:orientation="vertical" android:id="@id/topLayout" android:layout_width="fill_parent" android:layout_height="fill_parent" android:animateLayoutChanges="true"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <view android:id="@id/chessboard" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_centerHorizontal="true" class="com.jetstartgames.logic.ChessBoardPlay" />
+    <RelativeLayout android:id="@id/out2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentLeft="true">
+        <LinearLayout android:orientation="vertical" android:id="@id/button_layout_hor_left" android:layout_width="75.0dip" android:layout_height="wrap_content" android:layout_centerVertical="true">
+            <Button android:id="@id/button_menu" android:background="@drawable/xml_btn_menu2" android:layout_width="60.0dip" android:layout_height="60.0dip" android:layout_marginLeft="7.5dip" android:layout_marginTop="15.0dip" android:layout_marginRight="7.5dip" android:layout_marginBottom="23.0dip" android:soundEffectsEnabled="false" android:onClick="menuClicked" />
+            <Button android:id="@id/button_new_game" android:background="@drawable/xml_btn_new2" android:layout_width="60.0dip" android:layout_height="60.0dip" android:layout_marginLeft="7.5dip" android:layout_marginRight="7.5dip" android:soundEffectsEnabled="false" android:onClick="newGamePressed" />
+        </LinearLayout>
+    </RelativeLayout>
+    <RelativeLayout android:id="@id/out" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentRight="true">
+        <LinearLayout android:orientation="vertical" android:id="@id/button_layout_hor_right" android:layout_width="90.0dip" android:layout_height="wrap_content" android:layout_centerVertical="true">
+            <Button android:layout_gravity="right" android:id="@id/button_back" android:background="@drawable/xml_btn_undo2" android:layout_width="60.0dip" android:layout_height="60.0dip" android:layout_marginLeft="7.5dip" android:layout_marginTop="15.0dip" android:layout_marginRight="7.5dip" android:layout_marginBottom="23.0dip" android:soundEffectsEnabled="false" android:onClick="backClicked" />
+            <Button android:layout_gravity="right" android:id="@id/button_info" android:background="@drawable/xml_btn_info2" android:layout_width="60.0dip" android:layout_height="60.0dip" android:layout_marginLeft="7.5dip" android:layout_marginRight="7.5dip" android:layout_marginBottom="23.0dip" android:soundEffectsEnabled="false" android:onClick="infoPressed" />
+            <Button android:layout_gravity="right" android:id="@id/button_hint" android:background="@drawable/xml_btn_hint2" android:layout_width="60.0dip" android:layout_height="60.0dip" android:layout_marginLeft="7.5dip" android:layout_marginRight="7.5dip" android:soundEffectsEnabled="false" android:onClick="hintPressed" />
+        </LinearLayout>
+        <LinearLayout android:orientation="vertical" android:id="@id/button_layout_hor_right_analysis" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true">
+            <LinearLayout android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content">
+                <Button android:id="@id/button_analysisBack" android:background="@drawable/xml_btn_back" android:layout_width="60.0dip" android:layout_height="60.0dip" android:layout_marginLeft="7.5dip" android:layout_marginTop="15.0dip" android:layout_marginRight="7.5dip" android:layout_marginBottom="23.0dip" android:soundEffectsEnabled="false" android:onClick="analysisBackClicked" style="?android:buttonStyleSmall" />
+                <Button android:id="@id/button_analysisForfard" android:background="@drawable/xml_btn_forward" android:layout_width="60.0dip" android:layout_height="60.0dip" android:layout_marginLeft="7.5dip" android:layout_marginTop="15.0dip" android:layout_marginRight="7.5dip" android:layout_marginBottom="23.0dip" android:soundEffectsEnabled="false" android:onClick="analysisForwardClicked" style="?android:buttonStyleSmall" />
+            </LinearLayout>
+            <Button android:layout_gravity="right" android:id="@id/button_return_analysis" android:background="@drawable/xml_btn_return" android:layout_width="60.0dip" android:layout_height="60.0dip" android:layout_marginLeft="7.5dip" android:layout_marginRight="7.5dip" android:layout_marginBottom="23.0dip" android:soundEffectsEnabled="false" android:onClick="returnClicked" style="?android:buttonStyleSmall" />
+            <View android:layout_gravity="right" android:id="@id/analysis_loading" android:background="@drawable/analysis_loading" android:visibility="gone" android:layout_width="60.0dip" android:layout_height="60.0dip" android:layout_marginLeft="7.5dip" android:layout_marginRight="7.5dip" android:layout_alignParentLeft="true" />
+        </LinearLayout>
+    </RelativeLayout>
+    <RelativeLayout android:id="@id/wait" android:background="#a0000000" android:visibility="gone" android:clickable="true" android:layout_width="fill_parent" android:layout_height="fill_parent" />
+    <RelativeLayout android:id="@id/viewMode" android:background="#00000000" android:visibility="gone" android:clickable="true" android:layout_width="fill_parent" android:layout_height="fill_parent" />
+</RelativeLayout>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:background="@drawable/alert_border_white" android:padding="10.0dip" android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <RelativeLayout android:id="@id/title_line" android:layout_width="fill_parent" android:layout_height="wrap_content">
+        <ImageView android:gravity="left" android:id="@id/iconPack" android:layout_width="30.0dip" android:layout_height="30.0dip" android:layout_marginLeft="4.0dip" android:layout_marginTop="0.0dip" android:layout_marginRight="10.0dip" android:src="@drawable/premium" />
+        <TextView android:textSize="20.0dip" android:textStyle="bold" android:textColor="#ff000000" android:gravity="center" android:id="@id/title" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="4.0dip" android:layout_marginBottom="10.0dip" android:text="@string/premium_title" android:layout_toLeftOf="@id/viewButton" android:layout_toRightOf="@id/iconPack" />
+        <Button android:textColor="#ffffffff" android:gravity="right" android:id="@id/viewButton" android:background="@drawable/xml_view" android:visibility="invisible" android:layout_width="40.0dip" android:layout_height="28.0dip" android:layout_marginTop="2.0dip" android:layout_marginRight="5.0dip" android:layout_alignParentRight="true" android:soundEffectsEnabled="false" />
+    </RelativeLayout>
+    <LinearLayout android:orientation="vertical" android:id="@id/data_line" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_below="@id/title_line">
+        <LinearLayout android:gravity="center" android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="1.0dip">
+            <TextView android:textSize="15.0dip" android:textColor="#ff000000" android:gravity="left" android:id="@id/text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/premium_text" />
+            <TextView android:textSize="12.0dip" android:textColor="#ff6e6e6e" android:gravity="center" android:id="@id/text_extra" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="13.0dip" android:text="@string/premium_text_extra" />
+        </LinearLayout>
+    </LinearLayout>
+    <LinearLayout android:orientation="vertical" android:id="@id/button_line" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dip" android:layout_marginBottom="5.0dip" android:layout_below="@id/data_line">
+        <LinearLayout android:gravity="center" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="1.0dip">
+            <Button android:textSize="15.0dip" android:textStyle="bold" android:textColor="#ffffffff" android:gravity="center" android:id="@id/neutralButton" android:padding="0.0dip" android:layout_width="wrap_content" android:layout_height="35.0dip" android:minWidth="240.0dip" android:text="@string/premium_btn_text" android:soundEffectsEnabled="false" />
+        </LinearLayout>
+        <LinearLayout android:gravity="center" android:paddingTop="13.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="1.0dip">
+            <Button android:textSize="15.0dip" android:textStyle="bold" android:textColor="#ff000000" android:gravity="center" android:id="@id/monthButton" android:background="@drawable/xml_button_month" android:padding="0.0dip" android:layout_width="wrap_content" android:layout_height="35.0dip" android:minWidth="240.0dip" android:text="@string/premium_points_btn_text" android:soundEffectsEnabled="false" />
+        </LinearLayout>
+    </LinearLayout>
+</RelativeLayout>

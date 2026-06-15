@@ -1,0 +1,49 @@
+package com.google.android.gms.internal.measurement;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+
+/* compiled from: r8-map-id-a307fbaa7738d936b262c73ebf7b8b6bac6e9f6f8b4a6e0fce193b963190fdb4 */
+/* loaded from: classes.dex */
+public final class l implements n {
+    @Override // com.google.android.gms.internal.measurement.n
+    public final Boolean a() {
+        return Boolean.FALSE;
+    }
+
+    @Override // com.google.android.gms.internal.measurement.n
+    public final Double b() {
+        return Double.valueOf(0.0d);
+    }
+
+    @Override // com.google.android.gms.internal.measurement.n
+    public final Iterator e() {
+        return null;
+    }
+
+    public final boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        return obj instanceof l;
+    }
+
+    public final int hashCode() {
+        return 1;
+    }
+
+    @Override // com.google.android.gms.internal.measurement.n
+    public final n i(String str, c0.a aVar, ArrayList arrayList) {
+        throw new IllegalStateException("null has no function ".concat(str));
+    }
+
+    @Override // com.google.android.gms.internal.measurement.n
+    public final String j() {
+        return "null";
+    }
+
+    @Override // com.google.android.gms.internal.measurement.n
+    public final n k() {
+        return n.b;
+    }
+}
