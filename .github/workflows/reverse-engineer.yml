@@ -6,6 +6,9 @@ on:
       - 'apk/*.apk'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   decompile:
     runs-on: ubuntu-latest
@@ -13,6 +16,8 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Java 17
         uses: actions/setup-java@v4
@@ -30,21 +35,20 @@ jobs:
 
       - name: Decompile with apktool
         run: |
-          apktool d apk/Chess_2.9.4.apk --output output/apktool --force
+          apktool d apk/Chess_2.9.4.apk --output decompiled/apktool --force
           echo "apktool done"
 
       - name: Install jadx
         run: |
           JADX_VERSION=1.5.0
           wget -q "https://github.com/skylot/jadx/releases/download/v${JADX_VERSION}/jadx-${JADX_VERSION}.zip" -O /tmp/jadx.zip
-          mkdir -p /opt/jadx
-          cd /opt/jadx && unzip -q /tmp/jadx.zip
+          mkdir -p /opt/jadx && cd /opt/jadx && unzip -q /tmp/jadx.zip
           chmod +x /opt/jadx/bin/jadx
           /opt/jadx/bin/jadx --version
 
       - name: Decompile with jadx
         run: |
-          /opt/jadx/bin/jadx apk/Chess_2.9.4.apk --output-dir output/jadx --show-bad-code --threads-count 4
+          /opt/jadx/bin/jadx apk/Chess_2.9.4.apk --output-dir decompiled/jadx --show-bad-code --threads-count 4
           echo "jadx done"
 
       - name: Install dex2jar
@@ -57,44 +61,48 @@ jobs:
       - name: Convert DEX to JAR
         run: |
           DEX2JAR_VERSION=2.4
-          /opt/dex2jar/dex-tools-v${DEX2JAR_VERSION}/d2j-dex2jar.sh apk/Chess_2.9.4.apk --output output/chess-classes.jar --force || true
+          mkdir -p decompiled
+          /opt/dex2jar/dex-tools-v${DEX2JAR_VERSION}/d2j-dex2jar.sh apk/Chess_2.9.4.apk --output decompiled/chess-classes.jar --force || true
           echo "dex2jar done"
 
-      - name: Extract summary
+      - name: Build summary
         run: |
-          mkdir -p output/summary
-          cp output/apktool/AndroidManifest.xml output/summary/ 2>/dev/null || true
-          grep -oP 'android:name="\K[^"]+' output/apktool/AndroidManifest.xml | grep -i "permission" > output/summary/permissions.txt 2>/dev/null || true
-          find output/apktool/smali* -name "*.smali" 2>/dev/null | wc -l > output/summary/smali_class_count.txt
-          find output/jadx/sources -name "*.java" 2>/dev/null | wc -l > output/summary/java_class_count.txt
-          echo "=== Permissions ===" && cat output/summary/permissions.txt || true
-          echo "=== Smali classes ===" && cat output/summary/smali_class_count.txt
-          echo "=== Java classes ===" && cat output/summary/java_class_count.txt
+          mkdir -p decompiled/summary
+          cp decompiled/apktool/AndroidManifest.xml decompiled/summary/ 2>/dev/null || true
+          grep -oP 'android:name="\K[^"]+' decompiled/apktool/AndroidManifest.xml \
+            | grep -i "permission" > decompiled/summary/permissions.txt 2>/dev/null || true
+          SMALI_COUNT=$(find decompiled/apktool/smali* -name "*.smali" 2>/dev/null | wc -l)
+          JAVA_COUNT=$(find decompiled/jadx/sources -name "*.java" 2>/dev/null | wc -l)
+          cat > decompiled/summary/README.md << EOF
+          # Decompiled Output — Chess 2.9.4
 
-      - name: Upload apktool output
+          | Tool | Output |
+          |------|--------|
+          | apktool | \`decompiled/apktool/\` — smali bytecode, resources, AndroidManifest |
+          | jadx | \`decompiled/jadx/\` — reconstructed Java source |
+          | dex2jar | \`decompiled/chess-classes.jar\` — JAR for IntelliJ / JD-GUI |
+
+          ## Stats
+          - Smali classes: ${SMALI_COUNT}
+          - Java classes: ${JAVA_COUNT}
+
+          ## Permissions
+          $(cat decompiled/summary/permissions.txt 2>/dev/null || echo "none")
+          EOF
+          echo "Summary done — smali: $SMALI_COUNT, java: $JAVA_COUNT"
+
+      - name: Commit decompiled output to repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add decompiled/
+          git diff --cached --quiet && echo "Nothing changed, skipping commit" && exit 0
+          git commit -m "chore: update decompiled output from Chess_2.9.4.apk"
+          git push
+
+      - name: Upload artifacts (backup)
         uses: actions/upload-artifact@v4
         with:
-          name: apktool-output
-          path: output/apktool/
-          retention-days: 30
-
-      - name: Upload jadx Java source
-        uses: actions/upload-artifact@v4
-        with:
-          name: jadx-java-source
-          path: output/jadx/
-          retention-days: 30
-
-      - name: Upload JAR
-        uses: actions/upload-artifact@v4
-        with:
-          name: chess-classes-jar
-          path: output/chess-classes.jar
-          retention-days: 30
-
-      - name: Upload summary
-        uses: actions/upload-artifact@v4
-        with:
-          name: summary
-          path: output/summary/
+          name: decompiled-output
+          path: decompiled/
           retention-days: 30
