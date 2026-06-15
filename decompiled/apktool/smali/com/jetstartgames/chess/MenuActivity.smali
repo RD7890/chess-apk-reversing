@@ -15408,6 +15408,8 @@
 .method public prom_Prem_Clicked(Landroid/view/View;)V
     .locals 4
 
+    return-void
+
     .line 1
     sget-boolean p1, Lcom/jetstartgames/chess/MenuActivity;->Y:Z
 

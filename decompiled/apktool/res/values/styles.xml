@@ -2,8 +2,8 @@
 <resources>
     <style name="AppTheme" parent="@android:style/Theme.NoTitleBar.Fullscreen">
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
-        <item name="android:statusBarColor">#ff000000</item>
-        <item name="android:navigationBarColor">#ff000000</item>
+        <item name="android:statusBarColor">#ff2541</item>
+        <item name="android:navigationBarColor">#1a0000</item>
     </style>
     <style name="BillingProxy" parent="@android:style/Theme.Translucent.NoTitleBar">
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>

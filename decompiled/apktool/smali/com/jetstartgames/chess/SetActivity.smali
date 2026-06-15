@@ -21,7 +21,7 @@
 
 .field public static w:Z = false
 
-.field public static x:Z = false
+.field public static x:Z = true
 
 
 # instance fields
@@ -3882,6 +3882,8 @@
 
 .method public rmClicked(Landroid/view/View;)V
     .locals 4
+
+    return-void
 
     .line 1
     sget-boolean p1, Lcom/jetstartgames/chess/SetActivity;->x:Z
