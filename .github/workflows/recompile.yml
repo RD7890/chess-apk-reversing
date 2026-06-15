@@ -1,4 +1,4 @@
-name: Smart Recompile APK
+name: Recompile Patched APK
 
 on:
   push:
@@ -7,26 +7,31 @@ on:
   workflow_dispatch:
     inputs:
       app_name:
-        description: 'App folder name under decompiled/ (leave blank to auto-detect all changed)'
+        description: 'Folder name under decompiled/ (blank = auto-detect all changed)'
         required: false
         default: ''
 
 permissions:
   contents: write
 
-# Prevent loops: skip when auto-decompile bot commits decompiled/ back to the repo
+# ─── Job 1: figure out which apps changed ────────────────────────────────────
 jobs:
   detect:
     name: Detect changed apps
     runs-on: ubuntu-latest
-    # Never run when the push was made by github-actions[bot] (auto-decompile)
+    # Never run when auto-decompile bot pushes back to decompiled/
     if: github.actor != 'github-actions[bot]'
     outputs:
       apps: ${{ steps.find.outputs.apps }}
       has_apps: ${{ steps.find.outputs.has_apps }}
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.12.1
+        with:
+          access_token: ${{ github.token }}
+
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 2
 
@@ -34,41 +39,38 @@ jobs:
         id: find
         run: |
           if [ -n "${{ github.event.inputs.app_name }}" ]; then
-            # Manual override
             APPS="${{ github.event.inputs.app_name }}"
           else
             BEFORE="${{ github.event.before }}"
             AFTER="${{ github.sha }}"
             if [ "$BEFORE" = "0000000000000000000000000000000000000000" ] || [ -z "$BEFORE" ]; then
-              # First push — pick up everything under decompiled/
-              APPS=$(ls decompiled/ 2>/dev/null | tr '\n' ' ' | xargs)
+              APPS=$(ls decompiled/ 2>/dev/null | tr '\n' ' ')
             else
               APPS=$(git diff --name-only "$BEFORE" "$AFTER" \
                 | grep '^decompiled/' \
                 | awk -F'/' '{print $2}' \
-                | sort -u \
-                | tr '\n' ' ' \
-                | xargs)
+                | sort -u | tr '\n' ' ')
             fi
           fi
-
-          echo "Detected apps: $APPS"
+          APPS=$(echo "$APPS" | xargs)   # trim whitespace
+          echo "Apps to build: [$APPS]"
 
           if [ -z "$APPS" ]; then
-            echo "apps=[]" >> $GITHUB_OUTPUT
+            echo "apps=[]"       >> $GITHUB_OUTPUT
             echo "has_apps=false" >> $GITHUB_OUTPUT
           else
-            # Build JSON array for matrix
             JSON="["
             for app in $APPS; do
               [ -d "decompiled/$app" ] || continue
-              JSON="$JSON\"$app\","
+              JSON="${JSON}\"${app}\","
             done
             JSON="${JSON%,}]"
-            echo "apps=$JSON" >> $GITHUB_OUTPUT
+            echo "apps=$JSON"    >> $GITHUB_OUTPUT
             echo "has_apps=true" >> $GITHUB_OUTPUT
+            echo "Matrix: $JSON"
           fi
 
+# ─── Job 2: build, sign, release — one job per app ───────────────────────────
   build:
     name: Build ${{ matrix.app }}
     needs: detect
@@ -80,65 +82,79 @@ jobs:
         app: ${{ fromJson(needs.detect.outputs.apps) }}
 
     steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.12.1
+        with:
+          access_token: ${{ github.token }}
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
-      - name: Set up Java 17
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
-          distribution: 'temurin'
+          distribution: 'adopt'
 
-      - name: Install apktool ${{ env.APKTOOL_VERSION }}
-        env:
-          APKTOOL_VERSION: 2.9.3
+      # ── Cache apktool jar ──────────────────────────────────────────────────
+      - name: Cache apktool
+        uses: actions/cache@v4
+        with:
+          path: /usr/local/bin/apktool.jar
+          key: apktool-2.9.3
+
+      - name: Install apktool 2.9.3
         run: |
-          wget -q \
-            "https://github.com/iBotPeaches/Apktool/releases/download/v${APKTOOL_VERSION}/apktool_${APKTOOL_VERSION}.jar" \
-            -O /usr/local/bin/apktool.jar
+          if [ ! -f /usr/local/bin/apktool.jar ]; then
+            wget -q \
+              "https://github.com/iBotPeaches/Apktool/releases/download/v2.9.3/apktool_2.9.3.jar" \
+              -O /usr/local/bin/apktool.jar
+          fi
           printf '#!/bin/bash\nexec java -jar /usr/local/bin/apktool.jar "$@"\n' \
-            > /usr/local/bin/apktool
-          chmod +x /usr/local/bin/apktool
+            | sudo tee /usr/local/bin/apktool > /dev/null
+          sudo chmod +x /usr/local/bin/apktool
           apktool --version
 
+      # ── Locate Android build-tools (zipalign + apksigner) ─────────────────
       - name: Locate Android build-tools
         run: |
           SDK="${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}"
           BT=$(ls -d "$SDK/build-tools/"* 2>/dev/null | sort -V | tail -1)
           if [ -z "$BT" ]; then
-            echo "ERROR: Could not find Android build-tools under $SDK"
-            ls "$SDK/" || true
+            echo "ERROR: build-tools not found under $SDK"
             exit 1
           fi
           echo "BUILD_TOOLS=$BT" >> $GITHUB_ENV
-          echo "Found build-tools: $BT"
-          ls "$BT/zipalign" "$BT/apksigner"
+          echo "Using build-tools: $BT"
 
-      - name: Recompile ${{ matrix.app }} with apktool
-        run: |
-          mkdir -p output
-          APP="${{ matrix.app }}"
-          echo "Building decompiled/$APP → output/${APP}-unsigned.apk"
-          apktool b "decompiled/$APP" \
-            --output "output/${APP}-unsigned.apk" \
-            --force
-          echo "Build complete — $(du -h output/${APP}-unsigned.apk | cut -f1)"
-
-      - name: Generate debug keystore
+      # ── Generate a debug signing key ───────────────────────────────────────
+      - name: Generate signing keystore
         run: |
           keytool -genkeypair \
             -alias patcher \
             -keypass 123456 \
-            -keystore "$HOME/debug-key.jks" \
+            -keystore "$HOME/signing-key.jks" \
             -storepass 123456 \
             -dname "CN=APK Patcher,O=Patch,C=US" \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
+            -keyalg RSA -keysize 2048 -validity 10000 \
             -storetype JKS
+          echo "KEYSTORE=$HOME/signing-key.jks" >> $GITHUB_ENV
 
+      # ── apktool build ──────────────────────────────────────────────────────
+      - name: Recompile with apktool
+        run: |
+          APP="${{ matrix.app }}"
+          mkdir -p output
+          echo "▶ apktool b decompiled/$APP"
+          apktool b "decompiled/$APP" \
+            --output "output/${APP}-unsigned.apk" \
+            --force
+          echo "Build done — $(du -h output/${APP}-unsigned.apk | cut -f1)"
+
+      # ── zipalign ──────────────────────────────────────────────────────────
       - name: Zipalign
         run: |
           APP="${{ matrix.app }}"
@@ -146,39 +162,77 @@ jobs:
             "output/${APP}-unsigned.apk" \
             "output/${APP}-aligned.apk"
 
+      # ── apksigner ─────────────────────────────────────────────────────────
       - name: Sign APK
+        env:
+          SIGNING_STORE_PASSWORD: "123456"
+          SIGNING_KEY_PASSWORD: "123456"
         run: |
           APP="${{ matrix.app }}"
           "$BUILD_TOOLS/apksigner" sign \
-            --ks "$HOME/debug-key.jks" \
+            --ks "$KEYSTORE" \
             --ks-key-alias patcher \
-            --ks-pass pass:123456 \
-            --key-pass pass:123456 \
+            --ks-pass pass:$SIGNING_STORE_PASSWORD \
+            --key-pass pass:$SIGNING_KEY_PASSWORD \
             --out "output/${APP}-patched.apk" \
             "output/${APP}-aligned.apk"
 
-      - name: Verify APK signature
+      # ── Verify signature ───────────────────────────────────────────────────
+      - name: Verify APK
         run: |
           APP="${{ matrix.app }}"
           "$BUILD_TOOLS/apksigner" verify --verbose "output/${APP}-patched.apk"
-          echo "✅ Signature valid"
+          echo "✅ Signature verified"
           ls -lh "output/${APP}-patched.apk"
 
+      # ── Get version / build info ───────────────────────────────────────────
+      - name: Get app version
+        id: version
+        run: |
+          APP="${{ matrix.app }}"
+          VER=$(grep 'versionName=' "decompiled/$APP/apktool.yml" 2>/dev/null \
+            | awk -F"'" '{print $2}' | head -1 || echo "patched")
+          echo "name=$VER" >> $GITHUB_OUTPUT
+          echo "Version: $VER"
+
+      # ── Commit patched APK back to repo ───────────────────────────────────
       - name: Commit patched APK
         run: |
           APP="${{ matrix.app }}"
-          git config user.name "github-actions[bot]"
+          git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git pull --rebase origin main || true
           git add "output/${APP}-patched.apk"
           git diff --cached --quiet \
-            && echo "No change in APK, skipping commit" \
+            && echo "APK unchanged, skipping commit" \
             && exit 0
-          git commit -m "build(${APP}): recompile → output/${APP}-patched.apk [skip ci]"
+          git commit -m "build(${APP}): v${{ steps.version.outputs.name }} (#${{ github.run_number }}) [skip ci]"
           git push
 
-      - name: Upload APK artifact
+      # ── GitHub Release ─────────────────────────────────────────────────────
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ matrix.app }}-v${{ steps.version.outputs.name }}-build.${{ github.run_number }}
+          name: "${{ matrix.app }} v${{ steps.version.outputs.name }} (Build #${{ github.run_number }})"
+          body: |
+            **Automated patched build**
+            - App: `${{ matrix.app }}`
+            - Branch: `${{ github.ref_name }}`
+            - Commit: `${{ github.sha }}`
+            - Run: #${{ github.run_number }}
+
+            > Install via sideload (enable Unknown sources). Uninstall original first.
+          draft: false
+          prerelease: false
+          files: output/${{ matrix.app }}-patched.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── Upload artifact (backup) ───────────────────────────────────────────
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.app }}-patched
+          name: ${{ matrix.app }}-patched-build${{ github.run_number }}
           path: output/${{ matrix.app }}-patched.apk
           retention-days: 30
