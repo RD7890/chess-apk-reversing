@@ -24,11 +24,16 @@ jobs:
       - name: Install apktool
         run: |
           APKTOOL_VERSION=2.9.3
-          wget -q "https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_${APKTOOL_VERSION}.jar" \
+          # GitHub Releases (Bitbucket blocks CI runners)
+          wget -q "https://github.com/iBotPeaches/Apktool/releases/download/v${APKTOOL_VERSION}/apktool_${APKTOOL_VERSION}.jar" \
                -O /usr/local/bin/apktool.jar
-          wget -q "https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool" \
-               -O /usr/local/bin/apktool
+          # Inline wrapper script — no external download needed
+          cat > /usr/local/bin/apktool << 'EOF'
+          #!/bin/bash
+          java -jar /usr/local/bin/apktool.jar "$@"
+          EOF
           chmod +x /usr/local/bin/apktool
+          apktool --version
 
       - name: Decompile with apktool (smali + resources)
         run: |
@@ -44,8 +49,9 @@ jobs:
           JADX_VERSION=1.5.0
           wget -q "https://github.com/skylot/jadx/releases/download/v${JADX_VERSION}/jadx-${JADX_VERSION}.zip" \
                -O /tmp/jadx.zip
-          unzip -q /tmp/jadx.zip -d /opt/jadx
+          cd /tmp && jar xf jadx.zip -C /opt/jadx 2>/dev/null || (mkdir -p /opt/jadx && cd /opt/jadx && jar xf /tmp/jadx.zip)
           chmod +x /opt/jadx/bin/jadx
+          /opt/jadx/bin/jadx --version
 
       - name: Decompile with jadx (Java source)
         run: |
@@ -56,30 +62,27 @@ jobs:
           echo "✅ jadx done"
 
       # ── manifest + strings summary ────────────────────────────────────────
-      - name: Extract AndroidManifest summary
+      - name: Extract summary
         run: |
           mkdir -p output/summary
           cp output/apktool/AndroidManifest.xml output/summary/ 2>/dev/null || true
-          # List all permissions
           grep -oP 'android:name="\K[^"]+' output/apktool/AndroidManifest.xml \
-            | grep "permission" > output/summary/permissions.txt 2>/dev/null || true
-          # Count smali classes
+            | grep -i "permission" > output/summary/permissions.txt 2>/dev/null || true
           find output/apktool/smali* -name "*.smali" 2>/dev/null | wc -l \
             > output/summary/smali_class_count.txt
-          # Count Java classes from jadx
           find output/jadx/sources -name "*.java" 2>/dev/null | wc -l \
             > output/summary/java_class_count.txt
           echo "=== Permissions ===" && cat output/summary/permissions.txt || true
-          echo "=== Smali classes ===" && cat output/summary/smali_class_count.txt
-          echo "=== Java classes ===" && cat output/summary/java_class_count.txt
+          echo "=== Smali class count ===" && cat output/summary/smali_class_count.txt
+          echo "=== Java class count ===" && cat output/summary/java_class_count.txt
 
-      # ── dex2jar (extra) ──────────────────────────────────────────────────
+      # ── dex2jar ──────────────────────────────────────────────────────────
       - name: Install dex2jar
         run: |
           DEX2JAR_VERSION=2.4
           wget -q "https://github.com/pxb1988/dex2jar/releases/download/v${DEX2JAR_VERSION}/dex-tools-v${DEX2JAR_VERSION}.zip" \
                -O /tmp/dex2jar.zip
-          unzip -q /tmp/dex2jar.zip -d /opt/dex2jar
+          mkdir -p /opt/dex2jar && cd /opt/dex2jar && jar xf /tmp/dex2jar.zip
           chmod +x /opt/dex2jar/dex-tools-v${DEX2JAR_VERSION}/d2j-dex2jar.sh
 
       - name: Convert DEX to JAR
@@ -91,22 +94,22 @@ jobs:
             --force || true
           echo "✅ dex2jar done"
 
-      # ── upload all artifacts ──────────────────────────────────────────────
-      - name: Upload apktool output (smali + resources)
+      # ── upload artifacts ──────────────────────────────────────────────────
+      - name: Upload apktool output
         uses: actions/upload-artifact@v4
         with:
           name: apktool-output
           path: output/apktool/
           retention-days: 30
 
-      - name: Upload jadx output (Java source)
+      - name: Upload jadx Java source
         uses: actions/upload-artifact@v4
         with:
           name: jadx-java-source
           path: output/jadx/
           retention-days: 30
 
-      - name: Upload JAR file
+      - name: Upload JAR
         uses: actions/upload-artifact@v4
         with:
           name: chess-classes-jar
