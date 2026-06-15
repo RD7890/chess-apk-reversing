@@ -20,81 +20,57 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # ── apktool ──────────────────────────────────────────────────────────
       - name: Install apktool
         run: |
           APKTOOL_VERSION=2.9.3
-          # GitHub Releases (Bitbucket blocks CI runners)
-          wget -q "https://github.com/iBotPeaches/Apktool/releases/download/v${APKTOOL_VERSION}/apktool_${APKTOOL_VERSION}.jar" \
-               -O /usr/local/bin/apktool.jar
-          # Inline wrapper script — no external download needed
-          cat > /usr/local/bin/apktool << 'EOF'
-          #!/bin/bash
-          java -jar /usr/local/bin/apktool.jar "$@"
-          EOF
+          wget -q "https://github.com/iBotPeaches/Apktool/releases/download/v${APKTOOL_VERSION}/apktool_${APKTOOL_VERSION}.jar" -O /usr/local/bin/apktool.jar
+          printf '#!/bin/bash\njava -jar /usr/local/bin/apktool.jar "$@"\n' > /usr/local/bin/apktool
           chmod +x /usr/local/bin/apktool
           apktool --version
 
-      - name: Decompile with apktool (smali + resources)
+      - name: Decompile with apktool
         run: |
-          apktool d apk/Chess_2.9.4.apk \
-            --output output/apktool \
-            --no-res-decode \
-            --force
-          echo "✅ apktool done"
+          apktool d apk/Chess_2.9.4.apk --output output/apktool --force
+          echo "apktool done"
 
-      # ── jadx ─────────────────────────────────────────────────────────────
       - name: Install jadx
         run: |
           JADX_VERSION=1.5.0
-          wget -q "https://github.com/skylot/jadx/releases/download/v${JADX_VERSION}/jadx-${JADX_VERSION}.zip" \
-               -O /tmp/jadx.zip
-          cd /tmp && jar xf jadx.zip -C /opt/jadx 2>/dev/null || (mkdir -p /opt/jadx && cd /opt/jadx && jar xf /tmp/jadx.zip)
+          wget -q "https://github.com/skylot/jadx/releases/download/v${JADX_VERSION}/jadx-${JADX_VERSION}.zip" -O /tmp/jadx.zip
+          mkdir -p /opt/jadx
+          cd /opt/jadx && unzip -q /tmp/jadx.zip
           chmod +x /opt/jadx/bin/jadx
           /opt/jadx/bin/jadx --version
 
-      - name: Decompile with jadx (Java source)
+      - name: Decompile with jadx
         run: |
-          /opt/jadx/bin/jadx apk/Chess_2.9.4.apk \
-            --output-dir output/jadx \
-            --show-bad-code \
-            --threads-count 4
-          echo "✅ jadx done"
+          /opt/jadx/bin/jadx apk/Chess_2.9.4.apk --output-dir output/jadx --show-bad-code --threads-count 4
+          echo "jadx done"
 
-      # ── manifest + strings summary ────────────────────────────────────────
-      - name: Extract summary
-        run: |
-          mkdir -p output/summary
-          cp output/apktool/AndroidManifest.xml output/summary/ 2>/dev/null || true
-          grep -oP 'android:name="\K[^"]+' output/apktool/AndroidManifest.xml \
-            | grep -i "permission" > output/summary/permissions.txt 2>/dev/null || true
-          find output/apktool/smali* -name "*.smali" 2>/dev/null | wc -l \
-            > output/summary/smali_class_count.txt
-          find output/jadx/sources -name "*.java" 2>/dev/null | wc -l \
-            > output/summary/java_class_count.txt
-          echo "=== Permissions ===" && cat output/summary/permissions.txt || true
-          echo "=== Smali class count ===" && cat output/summary/smali_class_count.txt
-          echo "=== Java class count ===" && cat output/summary/java_class_count.txt
-
-      # ── dex2jar ──────────────────────────────────────────────────────────
       - name: Install dex2jar
         run: |
           DEX2JAR_VERSION=2.4
-          wget -q "https://github.com/pxb1988/dex2jar/releases/download/v${DEX2JAR_VERSION}/dex-tools-v${DEX2JAR_VERSION}.zip" \
-               -O /tmp/dex2jar.zip
-          mkdir -p /opt/dex2jar && cd /opt/dex2jar && jar xf /tmp/dex2jar.zip
+          wget -q "https://github.com/pxb1988/dex2jar/releases/download/v${DEX2JAR_VERSION}/dex-tools-v${DEX2JAR_VERSION}.zip" -O /tmp/dex2jar.zip
+          mkdir -p /opt/dex2jar && cd /opt/dex2jar && unzip -q /tmp/dex2jar.zip
           chmod +x /opt/dex2jar/dex-tools-v${DEX2JAR_VERSION}/d2j-dex2jar.sh
 
       - name: Convert DEX to JAR
         run: |
           DEX2JAR_VERSION=2.4
-          /opt/dex2jar/dex-tools-v${DEX2JAR_VERSION}/d2j-dex2jar.sh \
-            apk/Chess_2.9.4.apk \
-            --output output/chess-classes.jar \
-            --force || true
-          echo "✅ dex2jar done"
+          /opt/dex2jar/dex-tools-v${DEX2JAR_VERSION}/d2j-dex2jar.sh apk/Chess_2.9.4.apk --output output/chess-classes.jar --force || true
+          echo "dex2jar done"
 
-      # ── upload artifacts ──────────────────────────────────────────────────
+      - name: Extract summary
+        run: |
+          mkdir -p output/summary
+          cp output/apktool/AndroidManifest.xml output/summary/ 2>/dev/null || true
+          grep -oP 'android:name="\K[^"]+' output/apktool/AndroidManifest.xml | grep -i "permission" > output/summary/permissions.txt 2>/dev/null || true
+          find output/apktool/smali* -name "*.smali" 2>/dev/null | wc -l > output/summary/smali_class_count.txt
+          find output/jadx/sources -name "*.java" 2>/dev/null | wc -l > output/summary/java_class_count.txt
+          echo "=== Permissions ===" && cat output/summary/permissions.txt || true
+          echo "=== Smali classes ===" && cat output/summary/smali_class_count.txt
+          echo "=== Java classes ===" && cat output/summary/java_class_count.txt
+
       - name: Upload apktool output
         uses: actions/upload-artifact@v4
         with:
