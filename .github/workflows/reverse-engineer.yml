@@ -1,0 +1,121 @@
+name: Reverse Engineer APK
+
+on:
+  push:
+    paths:
+      - 'apk/*.apk'
+  workflow_dispatch:
+
+jobs:
+  decompile:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # ── apktool ──────────────────────────────────────────────────────────
+      - name: Install apktool
+        run: |
+          APKTOOL_VERSION=2.9.3
+          wget -q "https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_${APKTOOL_VERSION}.jar" \
+               -O /usr/local/bin/apktool.jar
+          wget -q "https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool" \
+               -O /usr/local/bin/apktool
+          chmod +x /usr/local/bin/apktool
+
+      - name: Decompile with apktool (smali + resources)
+        run: |
+          apktool d apk/Chess_2.9.4.apk \
+            --output output/apktool \
+            --no-res-decode \
+            --force
+          echo "✅ apktool done"
+
+      # ── jadx ─────────────────────────────────────────────────────────────
+      - name: Install jadx
+        run: |
+          JADX_VERSION=1.5.0
+          wget -q "https://github.com/skylot/jadx/releases/download/v${JADX_VERSION}/jadx-${JADX_VERSION}.zip" \
+               -O /tmp/jadx.zip
+          unzip -q /tmp/jadx.zip -d /opt/jadx
+          chmod +x /opt/jadx/bin/jadx
+
+      - name: Decompile with jadx (Java source)
+        run: |
+          /opt/jadx/bin/jadx apk/Chess_2.9.4.apk \
+            --output-dir output/jadx \
+            --show-bad-code \
+            --threads-count 4
+          echo "✅ jadx done"
+
+      # ── manifest + strings summary ────────────────────────────────────────
+      - name: Extract AndroidManifest summary
+        run: |
+          mkdir -p output/summary
+          cp output/apktool/AndroidManifest.xml output/summary/ 2>/dev/null || true
+          # List all permissions
+          grep -oP 'android:name="\K[^"]+' output/apktool/AndroidManifest.xml \
+            | grep "permission" > output/summary/permissions.txt 2>/dev/null || true
+          # Count smali classes
+          find output/apktool/smali* -name "*.smali" 2>/dev/null | wc -l \
+            > output/summary/smali_class_count.txt
+          # Count Java classes from jadx
+          find output/jadx/sources -name "*.java" 2>/dev/null | wc -l \
+            > output/summary/java_class_count.txt
+          echo "=== Permissions ===" && cat output/summary/permissions.txt || true
+          echo "=== Smali classes ===" && cat output/summary/smali_class_count.txt
+          echo "=== Java classes ===" && cat output/summary/java_class_count.txt
+
+      # ── dex2jar (extra) ──────────────────────────────────────────────────
+      - name: Install dex2jar
+        run: |
+          DEX2JAR_VERSION=2.4
+          wget -q "https://github.com/pxb1988/dex2jar/releases/download/v${DEX2JAR_VERSION}/dex-tools-v${DEX2JAR_VERSION}.zip" \
+               -O /tmp/dex2jar.zip
+          unzip -q /tmp/dex2jar.zip -d /opt/dex2jar
+          chmod +x /opt/dex2jar/dex-tools-v${DEX2JAR_VERSION}/d2j-dex2jar.sh
+
+      - name: Convert DEX to JAR
+        run: |
+          DEX2JAR_VERSION=2.4
+          /opt/dex2jar/dex-tools-v${DEX2JAR_VERSION}/d2j-dex2jar.sh \
+            apk/Chess_2.9.4.apk \
+            --output output/chess-classes.jar \
+            --force || true
+          echo "✅ dex2jar done"
+
+      # ── upload all artifacts ──────────────────────────────────────────────
+      - name: Upload apktool output (smali + resources)
+        uses: actions/upload-artifact@v4
+        with:
+          name: apktool-output
+          path: output/apktool/
+          retention-days: 30
+
+      - name: Upload jadx output (Java source)
+        uses: actions/upload-artifact@v4
+        with:
+          name: jadx-java-source
+          path: output/jadx/
+          retention-days: 30
+
+      - name: Upload JAR file
+        uses: actions/upload-artifact@v4
+        with:
+          name: chess-classes-jar
+          path: output/chess-classes.jar
+          retention-days: 30
+
+      - name: Upload summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: summary
+          path: output/summary/
+          retention-days: 30
