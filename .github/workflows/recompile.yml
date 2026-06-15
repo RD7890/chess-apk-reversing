@@ -1,20 +1,86 @@
-name: Recompile APK
+name: Smart Recompile APK
 
 on:
   push:
     paths:
-      - 'decompiled/apktool/**'
+      - 'decompiled/**'
   workflow_dispatch:
+    inputs:
+      app_name:
+        description: 'App folder name under decompiled/ (leave blank to auto-detect all changed)'
+        required: false
+        default: ''
 
 permissions:
   contents: write
 
+# Prevent loops: skip when auto-decompile bot commits decompiled/ back to the repo
 jobs:
-  build:
+  detect:
+    name: Detect changed apps
     runs-on: ubuntu-latest
+    # Never run when the push was made by github-actions[bot] (auto-decompile)
+    if: github.actor != 'github-actions[bot]'
+    outputs:
+      apps: ${{ steps.find.outputs.apps }}
+      has_apps: ${{ steps.find.outputs.has_apps }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Find changed app directories
+        id: find
+        run: |
+          if [ -n "${{ github.event.inputs.app_name }}" ]; then
+            # Manual override
+            APPS="${{ github.event.inputs.app_name }}"
+          else
+            BEFORE="${{ github.event.before }}"
+            AFTER="${{ github.sha }}"
+            if [ "$BEFORE" = "0000000000000000000000000000000000000000" ] || [ -z "$BEFORE" ]; then
+              # First push — pick up everything under decompiled/
+              APPS=$(ls decompiled/ 2>/dev/null | tr '\n' ' ' | xargs)
+            else
+              APPS=$(git diff --name-only "$BEFORE" "$AFTER" \
+                | grep '^decompiled/' \
+                | awk -F'/' '{print $2}' \
+                | sort -u \
+                | tr '\n' ' ' \
+                | xargs)
+            fi
+          fi
+
+          echo "Detected apps: $APPS"
+
+          if [ -z "$APPS" ]; then
+            echo "apps=[]" >> $GITHUB_OUTPUT
+            echo "has_apps=false" >> $GITHUB_OUTPUT
+          else
+            # Build JSON array for matrix
+            JSON="["
+            for app in $APPS; do
+              [ -d "decompiled/$app" ] || continue
+              JSON="$JSON\"$app\","
+            done
+            JSON="${JSON%,}]"
+            echo "apps=$JSON" >> $GITHUB_OUTPUT
+            echo "has_apps=true" >> $GITHUB_OUTPUT
+          fi
+
+  build:
+    name: Build ${{ matrix.app }}
+    needs: detect
+    if: needs.detect.outputs.has_apps == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJson(needs.detect.outputs.apps) }}
 
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -25,75 +91,94 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Install apktool
+      - name: Install apktool ${{ env.APKTOOL_VERSION }}
+        env:
+          APKTOOL_VERSION: 2.9.3
         run: |
-          APKTOOL_VERSION=2.9.3
-          wget -q "https://github.com/iBotPeaches/Apktool/releases/download/v${APKTOOL_VERSION}/apktool_${APKTOOL_VERSION}.jar" -O /usr/local/bin/apktool.jar
-          printf '#!/bin/bash\njava -jar /usr/local/bin/apktool.jar "$@"\n' > /usr/local/bin/apktool
+          wget -q \
+            "https://github.com/iBotPeaches/Apktool/releases/download/v${APKTOOL_VERSION}/apktool_${APKTOOL_VERSION}.jar" \
+            -O /usr/local/bin/apktool.jar
+          printf '#!/bin/bash\nexec java -jar /usr/local/bin/apktool.jar "$@"\n' \
+            > /usr/local/bin/apktool
           chmod +x /usr/local/bin/apktool
           apktool --version
 
-      - name: Recompile APK with apktool
+      - name: Locate Android build-tools
         run: |
-          apktool b decompiled/apktool --output output/chess-patched-unsigned.apk --force
-          echo "Build done"
+          SDK="${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}"
+          BT=$(ls -d "$SDK/build-tools/"* 2>/dev/null | sort -V | tail -1)
+          if [ -z "$BT" ]; then
+            echo "ERROR: Could not find Android build-tools under $SDK"
+            ls "$SDK/" || true
+            exit 1
+          fi
+          echo "BUILD_TOOLS=$BT" >> $GITHUB_ENV
+          echo "Found build-tools: $BT"
+          ls "$BT/zipalign" "$BT/apksigner"
+
+      - name: Recompile ${{ matrix.app }} with apktool
+        run: |
+          mkdir -p output
+          APP="${{ matrix.app }}"
+          echo "Building decompiled/$APP → output/${APP}-unsigned.apk"
+          apktool b "decompiled/$APP" \
+            --output "output/${APP}-unsigned.apk" \
+            --force
+          echo "Build complete — $(du -h output/${APP}-unsigned.apk | cut -f1)"
 
       - name: Generate debug keystore
         run: |
           keytool -genkeypair \
-            -alias androiddebugkey \
-            -keypass android \
-            -keystore /tmp/debug.keystore \
-            -storepass android \
-            -dname "CN=Android Debug,O=Android,C=US" \
+            -alias patcher \
+            -keypass 123456 \
+            -keystore "$HOME/debug-key.jks" \
+            -storepass 123456 \
+            -dname "CN=APK Patcher,O=Patch,C=US" \
             -keyalg RSA \
             -keysize 2048 \
-            -validity 10000
-          echo "Keystore ready"
+            -validity 10000 \
+            -storetype JKS
 
-      - name: Align and sign APK
+      - name: Zipalign
         run: |
-          # zipalign
-          ${ANDROID_HOME}/build-tools/*/zipalign -v -p 4 \
-            output/chess-patched-unsigned.apk \
-            output/chess-patched-aligned.apk || \
-          zipalign -v -p 4 \
-            output/chess-patched-unsigned.apk \
-            output/chess-patched-aligned.apk || \
-          cp output/chess-patched-unsigned.apk output/chess-patched-aligned.apk
+          APP="${{ matrix.app }}"
+          "$BUILD_TOOLS/zipalign" -v -p 4 \
+            "output/${APP}-unsigned.apk" \
+            "output/${APP}-aligned.apk"
 
-          # apksigner
-          ${ANDROID_HOME}/build-tools/*/apksigner sign \
-            --ks /tmp/debug.keystore \
-            --ks-key-alias androiddebugkey \
-            --ks-pass pass:android \
-            --key-pass pass:android \
-            --out output/chess-patched.apk \
-            output/chess-patched-aligned.apk || \
-          apksigner sign \
-            --ks /tmp/debug.keystore \
-            --ks-key-alias androiddebugkey \
-            --ks-pass pass:android \
-            --key-pass pass:android \
-            --out output/chess-patched.apk \
-            output/chess-patched-aligned.apk || \
-          cp output/chess-patched-aligned.apk output/chess-patched.apk
-
-          echo "Signing done"
-          ls -lh output/chess-patched.apk
-
-      - name: Commit patched APK to repo
+      - name: Sign APK
         run: |
+          APP="${{ matrix.app }}"
+          "$BUILD_TOOLS/apksigner" sign \
+            --ks "$HOME/debug-key.jks" \
+            --ks-key-alias patcher \
+            --ks-pass pass:123456 \
+            --key-pass pass:123456 \
+            --out "output/${APP}-patched.apk" \
+            "output/${APP}-aligned.apk"
+
+      - name: Verify APK signature
+        run: |
+          APP="${{ matrix.app }}"
+          "$BUILD_TOOLS/apksigner" verify --verbose "output/${APP}-patched.apk"
+          echo "✅ Signature valid"
+          ls -lh "output/${APP}-patched.apk"
+
+      - name: Commit patched APK
+        run: |
+          APP="${{ matrix.app }}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add output/chess-patched.apk
-          git diff --cached --quiet && echo "No changes" && exit 0
-          git commit -m "build: recompile patched Chess APK"
+          git add "output/${APP}-patched.apk"
+          git diff --cached --quiet \
+            && echo "No change in APK, skipping commit" \
+            && exit 0
+          git commit -m "build(${APP}): recompile → output/${APP}-patched.apk [skip ci]"
           git push
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: chess-patched-apk
-          path: output/chess-patched.apk
+          name: ${{ matrix.app }}-patched
+          path: output/${{ matrix.app }}-patched.apk
           retention-days: 30

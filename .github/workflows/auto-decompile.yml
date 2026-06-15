@@ -1,0 +1,173 @@
+name: Auto Decompile APK
+
+on:
+  push:
+    paths:
+      - 'apk/*.apk'
+  workflow_dispatch:
+    inputs:
+      apk_file:
+        description: 'APK filename inside apk/ (e.g. Chess_2.9.4.apk). Leave blank to process all.'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  detect:
+    name: Detect changed APKs
+    runs-on: ubuntu-latest
+    outputs:
+      apks: ${{ steps.find.outputs.apks }}
+      has_apks: ${{ steps.find.outputs.has_apks }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Find changed APK files
+        id: find
+        run: |
+          if [ -n "${{ github.event.inputs.apk_file }}" ]; then
+            FILES="apk/${{ github.event.inputs.apk_file }}"
+          else
+            BEFORE="${{ github.event.before }}"
+            AFTER="${{ github.sha }}"
+            if [ "$BEFORE" = "0000000000000000000000000000000000000000" ] || [ -z "$BEFORE" ]; then
+              FILES=$(ls apk/*.apk 2>/dev/null | tr '\n' ' ' | xargs)
+            else
+              FILES=$(git diff --name-only --diff-filter=AM "$BEFORE" "$AFTER" \
+                | grep '^apk/.*\.apk$' \
+                | tr '\n' ' ' \
+                | xargs)
+            fi
+          fi
+
+          echo "APK files to process: $FILES"
+
+          if [ -z "$FILES" ]; then
+            echo "apks=[]" >> $GITHUB_OUTPUT
+            echo "has_apks=false" >> $GITHUB_OUTPUT
+          else
+            JSON="["
+            for f in $FILES; do
+              [ -f "$f" ] || continue
+              JSON="$JSON\"$f\","
+            done
+            JSON="${JSON%,}]"
+            echo "apks=$JSON" >> $GITHUB_OUTPUT
+            echo "has_apks=true" >> $GITHUB_OUTPUT
+          fi
+
+  decompile:
+    name: Decompile ${{ matrix.apk_path }}
+    needs: detect
+    if: needs.detect.outputs.has_apks == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        apk_path: ${{ fromJson(needs.detect.outputs.apks) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Derive app name
+        run: |
+          BASENAME=$(basename "${{ matrix.apk_path }}" .apk)
+          echo "APP_NAME=$BASENAME" >> $GITHUB_ENV
+          echo "Decompiling: ${{ matrix.apk_path }} → decompiled/$BASENAME/"
+
+      - name: Install apktool
+        env:
+          APKTOOL_VERSION: 2.9.3
+        run: |
+          wget -q \
+            "https://github.com/iBotPeaches/Apktool/releases/download/v${APKTOOL_VERSION}/apktool_${APKTOOL_VERSION}.jar" \
+            -O /usr/local/bin/apktool.jar
+          printf '#!/bin/bash\nexec java -jar /usr/local/bin/apktool.jar "$@"\n' \
+            > /usr/local/bin/apktool
+          chmod +x /usr/local/bin/apktool
+          apktool --version
+
+      - name: Install jadx
+        env:
+          JADX_VERSION: 1.5.0
+        run: |
+          wget -q \
+            "https://github.com/skylot/jadx/releases/download/v${JADX_VERSION}/jadx-${JADX_VERSION}.zip" \
+            -O /tmp/jadx.zip
+          mkdir -p /opt/jadx && unzip -q /tmp/jadx.zip -d /opt/jadx
+          chmod +x /opt/jadx/bin/jadx
+          /opt/jadx/bin/jadx --version
+
+      - name: Decompile with apktool (smali + resources)
+        run: |
+          apktool d "${{ matrix.apk_path }}" \
+            --output "decompiled/$APP_NAME" \
+            --force
+          echo "apktool done"
+
+      - name: Decompile with jadx (Java source)
+        run: |
+          /opt/jadx/bin/jadx "${{ matrix.apk_path }}" \
+            --output-dir "decompiled/${APP_NAME}-java" \
+            --show-bad-code \
+            --threads-count 4 || true
+          echo "jadx done"
+
+      - name: Write summary
+        run: |
+          SMALI=$(find "decompiled/$APP_NAME/smali"* -name "*.smali" 2>/dev/null | wc -l)
+          JAVA=$(find "decompiled/${APP_NAME}-java/sources" -name "*.java" 2>/dev/null | wc -l)
+          PKG=$(grep 'package=' "decompiled/$APP_NAME/AndroidManifest.xml" 2>/dev/null \
+                | grep -oP 'package="\K[^"]+' | head -1 || echo "unknown")
+          cat > "decompiled/$APP_NAME/PATCH_NOTES.md" << EOF
+          # $APP_NAME — Decompiled Output
+
+          | Tool | Path | Files |
+          |------|------|-------|
+          | apktool | \`decompiled/$APP_NAME/\` | $SMALI smali |
+          | jadx | \`decompiled/${APP_NAME}-java/\` | $JAVA java |
+
+          **Package:** \`$PKG\`
+          **Decompiled:** $(date -u)
+          **Source APK:** \`${{ matrix.apk_path }}\`
+
+          ## Quick edit guide
+          - Resources/layouts: \`decompiled/$APP_NAME/res/\`
+          - Bytecode: \`decompiled/$APP_NAME/smali*/\`
+          - Java source (read-only ref): \`decompiled/${APP_NAME}-java/sources/\`
+          - Manifest: \`decompiled/$APP_NAME/AndroidManifest.xml\`
+
+          Push edits to \`decompiled/$APP_NAME/\` → recompile workflow fires automatically.
+          EOF
+
+      - name: Commit decompiled output
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "decompiled/$APP_NAME/" "decompiled/${APP_NAME}-java/" || true
+          git diff --cached --quiet \
+            && echo "Nothing changed, skipping" \
+            && exit 0
+          git commit -m "chore(decompile): $APP_NAME from ${{ matrix.apk_path }} [skip ci]"
+          git push
+
+      - name: Upload decompiled artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-decompiled
+          path: decompiled/${{ env.APP_NAME }}/
+          retention-days: 14
